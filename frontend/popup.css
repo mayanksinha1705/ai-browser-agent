@@ -1,0 +1,140 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  width: 320px;
+  background: #ffffff;
+  color: #000000;
+  font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+}
+
+.app {
+  padding: 14px 16px 12px 16px;
+}
+
+.app__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.app__header h1 {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: 0.2px;
+}
+
+.app__subtitle {
+  font-size: 10px;
+  color: #555555;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.rule {
+  border: none;
+  border-top: 1px solid #000000;
+  margin: 10px 0;
+}
+
+.label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+textarea {
+  width: 100%;
+  resize: vertical;
+  border: 1px solid #000000;
+  border-radius: 4px;
+  padding: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  color: #000000;
+  background: #ffffff;
+}
+
+textarea:focus {
+  outline: none;
+  border-width: 2px;
+}
+
+.btn {
+  width: 100%;
+  margin-top: 10px;
+  padding: 9px 0;
+  background: #000000;
+  color: #ffffff;
+  border: 1px solid #000000;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background: #222222;
+}
+
+.btn:disabled {
+  background: #999999;
+  border-color: #999999;
+  cursor: not-allowed;
+}
+
+.examples {
+  margin-top: 12px;
+}
+
+.examples__title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 4px 0;
+  color: #333333;
+}
+
+.examples ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.examples li {
+  font-size: 11.5px;
+  color: #222222;
+  margin-bottom: 2px;
+  font-style: italic;
+}
+
+.status {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+}
+
+.status__label {
+  font-size: 12px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.status__text {
+  font-size: 12px;
+  margin: 0;
+  word-break: break-word;
+}
+
+.status__text.is-error {
+  font-weight: 700;
+}
+
+.status__text.is-success {
+  font-weight: 600;
+}

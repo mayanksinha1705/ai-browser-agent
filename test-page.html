@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>AI Browser Agent — Test Page</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    max-width: 640px;
+    margin: 40px auto;
+    padding: 0 20px 120px 20px;
+    background: #ffffff;
+    color: #000000;
+    font-family: Georgia, "Times New Roman", serif;
+    line-height: 1.6;
+  }
+  h1 { border-bottom: 2px solid #000; padding-bottom: 8px; }
+  h2 { margin-top: 40px; border-bottom: 1px solid #000; padding-bottom: 4px; }
+  .field { margin-bottom: 16px; }
+  label { display: block; font-weight: bold; margin-bottom: 4px; font-family: Arial, sans-serif; }
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  select {
+    width: 100%;
+    max-width: 320px;
+    padding: 8px;
+    border: 1px solid #000;
+    border-radius: 3px;
+    font-size: 14px;
+    background: #fff;
+    color: #000;
+    font-family: Arial, sans-serif;
+  }
+  button {
+    padding: 9px 22px;
+    margin-right: 10px;
+    margin-top: 8px;
+    border: 1px solid #000;
+    border-radius: 3px;
+    background: #000;
+    color: #fff;
+    font-size: 14px;
+    font-family: Arial, sans-serif;
+    cursor: pointer;
+  }
+  button:hover { background: #333; }
+  a { color: #000; }
+  #form-result {
+    margin-top: 16px;
+    padding: 10px;
+    border: 1px dashed #000;
+    display: none;
+    font-family: Arial, sans-serif;
+  }
+  .filler { color: #333; }
+  footer { margin-top: 60px; border-top: 2px solid #000; padding-top: 12px; font-size: 12px; color: #444; }
+</style>
+</head>
+<body>
+
+  <h1>AI Browser Agent — Test Page</h1>
+  <p>This page exists to exercise every Phase&nbsp;1 action: CLICK, TYPE, SCROLL, SELECT, and NAVIGATE.</p>
+
+  <h2>Registration form</h2>
+
+  <form id="demo-form">
+    <div class="field">
+      <label for="name">Name</label>
+      <input type="text" id="name" name="name" placeholder="Enter your name" />
+    </div>
+
+    <div class="field">
+      <label for="email">Email</label>
+      <input type="email" id="email" name="email" placeholder="Enter your email" />
+    </div>
+
+    <div class="field">
+      <label for="password">Password (typing here is intentionally disabled by the agent)</label>
+      <input type="password" id="password" name="password" placeholder="Password" />
+    </div>
+
+    <div class="field">
+      <label for="country">Country</label>
+      <select id="country" name="country">
+        <option value="">-- Select --</option>
+        <option value="in">India</option>
+        <option value="us">United States</option>
+        <option value="uk">United Kingdom</option>
+        <option value="ca">Canada</option>
+        <option value="au">Australia</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="gender">Gender</label>
+      <select id="gender" name="gender">
+        <option value="">-- Select --</option>
+        <option value="male">Male</option>
+        <option value="female">Female</option>
+        <option value="other">Other</option>
+      </select>
+    </div>
+
+    <button type="button" id="submit-btn">Submit</button>
+    <button type="button" id="login-btn">Login</button>
+
+    <div id="form-result"></div>
+  </form>
+
+  <h2>Background reading</h2>
+  <p class="filler">
+    Paragraph one. This block of text exists purely so the page has enough
+    height to scroll. Browser automation agents need to be tested against
+    real scrolling behaviour, not just short pages that fit entirely inside
+    the viewport. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+  </p>
+  <p class="filler">
+    Paragraph two. Sed do eiusmod tempor incididunt ut labore et dolore
+    magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation
+    ullamco laboris nisi ut aliquip ex ea commodo consequat.
+  </p>
+  <p class="filler">
+    Paragraph three. Duis aute irure dolor in reprehenderit in voluptate
+    velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint
+    occaecat cupidatat non proident, sunt in culpa qui officia deserunt.
+  </p>
+  <p class="filler">
+    Paragraph four. At vero eos et accusamus et iusto odio dignissimos
+    ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti
+    quos dolores et quas molestias excepturi sint occaecati cupiditate.
+  </p>
+  <p class="filler">
+    Paragraph five. Nam libero tempore, cum soluta nobis est eligendi
+    optio cumque nihil impedit quo minus id quod maxime placeat facere
+    possimus, omnis voluptas assumenda est, omnis dolor repellendus.
+  </p>
+  <p class="filler">
+    Paragraph six. Temporibus autem quibusdam et aut officiis debitis aut
+    rerum necessitatibus saepe eveniet ut et voluptates repudiandae sint
+    et molestiae non recusandae. Itaque earum rerum hic tenetur a sapiente.
+  </p>
+  <p class="filler">
+    Paragraph seven. Keep scrolling — there is more content below so that
+    "Scroll down 800 pixels" and "Scroll up" have room to do something
+    visible and testable.
+  </p>
+
+  <h2>Links</h2>
+  <ul>
+    <li><a href="https://www.google.com" target="_blank" rel="noopener">Google</a></li>
+    <li><a href="https://github.com" target="_blank" rel="noopener">GitHub</a></li>
+    <li><a href="https://developer.chrome.com/docs/extensions/" target="_blank" rel="noopener">Chrome Extensions docs</a></li>
+  </ul>
+
+  <p class="filler">
+    Paragraph eight. Final filler paragraph before the footer, confirming
+    the bottom of the scrollable area has been reached.
+  </p>
+
+  <footer>
+    AI Browser Agent — Phase 1 test fixture. No data on this page is sent
+    anywhere except the visible screenshot pixels, which go only to your
+    local Ollama instance.
+  </footer>
+
+  <script>
+    document.getElementById("submit-btn").addEventListener("click", () => {
+      const result = document.getElementById("form-result");
+      result.style.display = "block";
+      result.textContent = "Submit clicked.";
+    });
+    document.getElementById("login-btn").addEventListener("click", () => {
+      const result = document.getElementById("form-result");
+      result.style.display = "block";
+      result.textContent = "Login clicked.";
+    });
+  </script>
+</body>
+</html>

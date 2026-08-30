@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>AI Browser Agent</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="app__header">
+      <h1>AI Browser Agent</h1>
+      <span class="app__subtitle">Phase 1 prototype</span>
+    </header>
+
+    <hr class="rule" />
+
+    <label class="label" for="instruction">Tell the browser what to do:</label>
+    <textarea
+      id="instruction"
+      rows="3"
+      placeholder="e.g. Click the Submit button"
+    ></textarea>
+
+    <button id="execute-btn" class="btn">EXECUTE</button>
+
+    <div class="examples">
+      <p class="examples__title">Examples</p>
+      <ul>
+        <li>"Click the Submit button"</li>
+        <li>"Type Mayank into the Name field"</li>
+        <li>"Select India from Country"</li>
+        <li>"Scroll down"</li>
+        <li>"Go to https://google.com"</li>
+      </ul>
+    </div>
+
+    <hr class="rule" />
+
+    <div class="status">
+      <p class="status__label">Status:</p>
+      <p id="status-text" class="status__text">Ready</p>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

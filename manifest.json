@@ -1,0 +1,34 @@
+{
+  "manifest_version": 3,
+  "name": "AI Browser Agent — Phase 1",
+  "version": "0.1.0",
+  "description": "Screenshot + instruction -> Gemma 4 (vision) via Ollama -> validated JSON -> local DOM/browser action. Phase 1 prototype for On-device Visual Perception for Light-weight Browser Agents.",
+
+  "action": {
+    "default_popup": "frontend/popup.html",
+    "default_title": "AI Browser Agent"
+  },
+
+  "background": {
+    "service_worker": "extension-core/background.js",
+    "type": "module"
+  },
+
+  "permissions": [
+    "activeTab",
+    "storage"
+  ],
+
+  "host_permissions": [
+    "http://localhost:11434/*"
+  ],
+
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["extension-core/action-executor.js", "extension-core/content.js"],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ]
+}
