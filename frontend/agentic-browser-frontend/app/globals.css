@@ -1,0 +1,85 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 5%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 5%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 4% 12%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 4% 12%;
+    --muted-foreground: 240 5% 65%;
+    --accent: 189 94% 55%;
+    --accent-foreground: 240 10% 3.9%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 4% 15%;
+    --input: 240 4% 15%;
+    --ring: 217 91% 60%;
+    --radius: 0.75rem;
+  }
+  * { @apply border-border; }
+  html { scroll-behavior: smooth; }
+  body {
+    @apply bg-background text-foreground;
+    background-image:
+      radial-gradient(600px circle at 0% 0%, hsl(217 91% 60% / 0.08), transparent 40%),
+      radial-gradient(800px circle at 100% 20%, hsl(280 91% 60% / 0.06), transparent 40%);
+  }
+}
+
+@layer utilities {
+  .grid-bg {
+    background-image:
+      linear-gradient(to right, hsl(240 4% 15% / 0.6) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(240 4% 15% / 0.6) 1px, transparent 1px);
+    background-size: 44px 44px;
+    mask-image: radial-gradient(ellipse 60% 60% at 50% 40%, black 40%, transparent 100%);
+  }
+  .text-gradient {
+    background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 45%, #22d3ee 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .gradient-border {
+    position: relative;
+    background: hsl(240 10% 5%);
+    border-radius: 0.75rem;
+  }
+  .gradient-border::before {
+    content: '';
+    position: absolute; inset: 0;
+    padding: 1px;
+    border-radius: 0.75rem;
+    background: linear-gradient(135deg, rgba(96,165,250,0.5), rgba(167,139,250,0.15) 40%, rgba(34,211,238,0.5));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    pointer-events: none;
+  }
+  .glow {
+    box-shadow: 0 0 60px -12px rgba(96,165,250,0.35);
+  }
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+  .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+}
+
+@keyframes blink { 0%, 50% { opacity: 1 } 50.01%, 100% { opacity: 0 } }
+.caret::after {
+  content: '▌'; margin-left: 2px; animation: blink 1s steps(1) infinite;
+  color: #22d3ee;
+}
+
+@keyframes float-up {
+  0% { transform: translateY(0) translateX(0); opacity: 0; }
+  10% { opacity: 1; }
+  100% { transform: translateY(-120px) translateX(20px); opacity: 0; }
+}
+.particle { animation: float-up linear infinite; }

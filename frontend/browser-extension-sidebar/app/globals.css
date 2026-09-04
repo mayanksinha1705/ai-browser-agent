@@ -1,0 +1,248 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 5%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 5%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 4% 12%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 4% 12%;
+    --muted-foreground: 240 5% 65%;
+    --accent: 189 94% 55%;
+    --accent-foreground: 240 10% 3.9%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 4% 15%;
+    --input: 240 4% 15%;
+    --ring: 217 91% 60%;
+    --radius: 0.75rem;
+  }
+
+  .light {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 4% 96%;
+    --secondary-foreground: 240 5% 25%;
+    --muted: 240 4% 95%;
+    --muted-foreground: 240 4% 45%;
+    --accent: 189 94% 43%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5% 90%;
+    --input: 240 5% 90%;
+    --ring: 217 91% 60%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  }
+
+  html[data-embed="extension"] body {
+    background: transparent;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .text-gradient {
+    background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 45%, #22d3ee 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .gradient-border {
+    position: relative;
+    background: hsl(240 10% 5%);
+    border-radius: 0.75rem;
+  }
+
+  .gradient-border::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    padding: 1px;
+    border-radius: 0.75rem;
+    background: linear-gradient(135deg, rgba(96,165,250,0.5), rgba(167,139,250,0.15) 40%, rgba(34,211,238,0.5));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  .glow {
+    box-shadow: 0 0 60px -12px rgba(96,165,250,0.35);
+  }
+
+  .resize-handle {
+    cursor: ew-resize;
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 6px;
+    background: transparent;
+    z-index: 50;
+    transition: background-color 0.15s;
+  }
+
+  .resize-handle:hover {
+    background: rgba(96, 165, 250, 0.3);
+  }
+
+  .resize-handle.dragging {
+    background: rgba(96, 165, 250, 0.5);
+  }
+
+  .resize-handle-n { cursor: ns-resize; }
+  .resize-handle-s { cursor: ns-resize; }
+  .resize-handle-e { cursor: ew-resize; }
+  .resize-handle-w { cursor: ew-resize; }
+  .resize-handle-nw { cursor: nwse-resize; }
+  .resize-handle-ne { cursor: nesw-resize; }
+  .resize-handle-sw { cursor: nesw-resize; }
+  .resize-handle-se { cursor: nwse-resize; }
+}
+
+/* Custom animations */
+@keyframes pulse-dot {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.1);
+  }
+}
+
+.animate-pulse-dot {
+  animation: pulse-dot 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes bounce-slow {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-bounce-slow {
+  animation: bounce-slow 3s ease-in-out infinite;
+}
+
+/* Message animations */
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
+
+/* Spinner animation */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin 2s linear infinite;
+}
+
+/* Floating chat window */
+.chat-window {
+  border-radius: 1.5rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.chat-window-light {
+  box-shadow: 0 10px 38px rgba(0, 0, 0, 0.12);
+}
+
+/* Chatbot message bubbles - Gemini style */
+.message-bubble-user {
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  color: white;
+  border-radius: 1.125rem;
+}
+
+.message-bubble-agent {
+  background: hsl(var(--secondary));
+  border-radius: 1.125rem;
+}
+
+/* Agent typing indicator dots */
+.typing-dot {
+  animation: bounce 1.4s ease-in-out 0s both infinite;
+}
+
+.typing-dot:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+.typing-dot:nth-child(3) {
+  animation-delay: -0.32s;
+}
+
+@keyframes bounce {
+  0%, 80%, 100% {
+    transform: scale(0);
+  }
+  40% {
+    transform: scale(1);
+  }
+}
+
+/* Drag cursor */
+.curse-dragging {
+  cursor: grabbing;
+  user-select: none;
+}
