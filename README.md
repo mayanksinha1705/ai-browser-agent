@@ -9,6 +9,7 @@ DOM APIs / Chrome extension APIs.
 This is **Phase 1 only** — no OCR, no local vision model, no PII
 detection, no privacy pipeline. Those are later phases.
 
+
 ---
 
 ## 1. Project structure
@@ -412,5 +413,6 @@ no confidence-based confirmation UI, no local/on-device vision model, no
 OCR, no PII detection or redaction, no privacy-preserving transmission
 pipeline, no multi-agent orchestration, no database, no auth. These are
 Phases 2–4.
-#   a i - b r o w s e r - a g e n t  
+#   a i - b r o w s e r - a g e n t 
+ 
  
