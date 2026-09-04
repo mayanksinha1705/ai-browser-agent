@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PAROKSH</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      width: 320px;
+      min-height: 200px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0b0f19;
+      color: #f8fafc;
+      padding: 16px;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .logo {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #3b82f6, #a855f7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .logo span {
+      font-size: 12px;
+      font-weight: 700;
+      color: white;
+    }
+    .title {
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .subtitle {
+      font-size: 12px;
+      opacity: 0.6;
+    }
+    .btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid #1e293b;
+      background: #1e293b;
+      color: #f8fafc;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.2s;
+      margin-bottom: 8px;
+    }
+    .btn:hover {
+      background: #273449;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #3b82f6, #6366f1, #a855f7);
+      border: none;
+      color: white;
+      font-weight: 600;
+    }
+    .btn-primary:hover {
+      opacity: 0.9;
+    }
+    .shortcut {
+      margin-top: 12px;
+      font-size: 11px;
+      opacity: 0.5;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo"><span>AI</span></div>
+    <div>
+      <div class="title">PAROKSH</div>
+      <div class="subtitle">AI Browser Agent</div>
+    </div>
+  </div>
+
+  <button class="btn btn-primary" id="toggle-chat">
+    Open Chat Window
+  </button>
+
+  <button class="btn" id="close-all">
+    Close Chat on All Pages
+  </button>
+
+  <div class="shortcut">
+    Shortcut: Ctrl/Cmd + Shift + I
+  </div>
+
+  <script>
+    document.getElementById('toggle-chat').addEventListener('click', () => {
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        chrome.tabs.sendMessage(tabs[0].id, { action: 'toggleChat' });
+      });
+    });
+
+    document.getElementById('close-all').addEventListener('click', () => {
+      chrome.tabs.query({}, (tabs) => {
+        tabs.forEach(tab => {
+          chrome.tabs.sendMessage(tab.id, { action: 'closeChat' }).catch(() => {});
+        });
+      });
+    });
+  </script>
+</body>
+</html>
