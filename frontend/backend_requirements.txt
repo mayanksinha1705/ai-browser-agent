@@ -1,0 +1,59 @@
+# API and Backend Requirements for PAROKSH Frontend Projects
+
+Based on the analysis of the current frontend codebase, there are two distinct projects:
+1. `agentic-browser-frontend` (Landing Page)
+2. `browser-extension-sidebar` (PAROKSH AI Agent Sidebar Mockup)
+
+Currently, the frontends use a `mock-agent.js` and hardcoded state to simulate behavior. To make these applications fully functional, the following backend architecture and API requirements need to be implemented.
+
+## 1. Browser Extension Sidebar (PAROKSH) Requirements
+
+This is the core application where a user interacts with an AI agent. The backend must handle long-running agent tasks and provide real-time updates to the frontend.
+
+### A. Real-time Communication Layer
+Since the agent executes steps over time and emits events, a real-time connection is required.
+- **WebSocket or Server-Sent Events (SSE)** endpoint (e.g., `/api/stream/agent`)
+- **Required Events to Stream:**
+  - `status_changed`: When the agent starts thinking, working, pausing, or completes.
+  - `message_added`: Agent text responses to the chat.
+  - `browser_action`: Real-time logs of what the browser agent is doing (e.g., navigating, clicking).
+  - `step_started` / `step_completed`: Progress tracking for the UI execution panel.
+  - `confirmation_required`: When the agent needs human-in-the-loop approval.
+
+### B. RESTful APIs for Task Management
+- **POST `/api/agent/task/start`**
+  - Payload: `{ "userMessage": "find me a laptop under $1000", "flowId": "optional-preset-flow" }`
+  - Response: `{ "taskId": "12345", "status": "started" }`
+- **POST `/api/agent/task/:taskId/pause`** & **POST `/api/agent/task/:taskId/resume`**
+  - To handle user pausing/resuming the agent's work.
+- **POST `/api/agent/task/:taskId/cancel`**
+  - To immediately halt the browser agent.
+- **POST `/api/agent/task/:taskId/confirm`**
+  - Payload: `{ "approved": true, "feedback": "optional instructions" }`
+  - Used when the agent requires user confirmation before proceeding (e.g., making a purchase or filling a form).
+
+### C. Agent Execution Engine (Backend Service)
+- A secure environment (e.g., Docker containers) running headless browsers (Puppeteer, Playwright, or Agentic Browser core).
+- Integration with LLMs (OpenAI, Anthropic, etc.) to drive the agent logic.
+- Secure credential management (if the agent needs to log into services on behalf of the user).
+
+
+## 2. Agentic Browser Landing Page Requirements
+
+The landing page (`agentic-browser-frontend`) is currently static marketing material. To activate it, simple backend services are needed:
+
+### A. Authentication & User Management (If providing a dashboard)
+- **POST `/api/auth/signup`** & **POST `/api/auth/login`**
+- **GET `/api/user/profile`**
+
+### B. Waitlist / Lead Generation
+- **POST `/api/waitlist/join`**
+  - Payload: `{ "email": "user@example.com" }`
+  - Integration with email services (SendGrid, Mailchimp) or a database (MongoDB).
+
+### C. Telemetry & Analytics
+- Basic endpoints to track SDK downloads or CLI usage as advertised on the page.
+
+## Database Requirements
+- **MongoDB / PostgreSQL**: To store user profiles, task history, chat logs, and billing/subscription information.
+- **Redis**: For caching, rate-limiting, and managing active WebSocket sessions for the browser agents.
