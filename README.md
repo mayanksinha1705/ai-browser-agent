@@ -1,418 +1,868 @@
-# AI Browser Agent — Phase 1
+# 🤖 AI Browser Agent — Phase 1
 
-A minimal Chrome extension (Manifest V3) that takes a screenshot of the
-active tab, sends it plus a natural-language instruction to **Gemma 4
-(`gemma4:31b-cloud`)** through a **local Ollama** installation, receives a
-strict JSON action back, validates it, and executes it locally through
-DOM APIs / Chrome extension APIs.
+> A minimal Chrome Manifest V3 browser agent that converts natural-language instructions into validated browser actions using **Gemma 4** through **local Ollama**.
 
-This is **Phase 1 only** — no OCR, no local vision model, no PII
-detection, no privacy pipeline. Those are later phases.
+The agent captures the active tab, sends the screenshot and user instruction to `gemma4:31b-cloud`, receives a strict JSON action, validates it against a fixed schema, and executes the action locally through Chrome Extension APIs and DOM APIs.
 
+**Phase 1 is intentionally minimal.** OCR, PII detection/redaction, local vision models, privacy pipelines, multi-agent orchestration, authentication, and persistence are planned for later phases.
 
 ---
 
-## 1. Project structure
+## ✨ Features
 
-Organized by team ownership area. Folders marked *(placeholder)* contain no
-code yet — see their own README for who owns that area and why it's empty.
+* 🧠 Natural-language browser instructions
+* 📸 Active-tab screenshot understanding
+* 🤖 Gemma 4 vision-language reasoning
+* 🦙 Local Ollama integration
+* 🔒 Strict JSON action validation
+* 🌐 Safe URL navigation
+* 🖱️ DOM-based clicking
+* ⌨️ Text input automation
+* 📜 Page scrolling
+* 🔽 Native `<select>` dropdown selection
+* 🛡️ Password-field protection
+* 🚫 No `eval()` or `new Function()`
+* 🔌 Chrome Manifest V3 architecture
+* 💻 No application backend required in Phase 1
 
+---
+
+# 🏗️ Architecture
+
+```text
+                         USER
+                          │
+                          │ Natural-language instruction
+                          ▼
+                ┌─────────────────────┐
+                │   Extension Popup   │
+                │ popup.html/js/css    │
+                └──────────┬──────────┘
+                           │
+                           │ EXECUTE_INSTRUCTION
+                           ▼
+                ┌─────────────────────┐
+                │ Background Worker   │
+                │   background.js     │
+                └──────────┬──────────┘
+                           │
+             ┌─────────────┴─────────────┐
+             │                           │
+             ▼                           ▼
+   captureVisibleTab()            ollama.js
+             │                           │
+             │ Screenshot                │ POST /api/chat
+             │                           ▼
+             │                    ┌──────────────┐
+             │                    │   Ollama     │
+             │                    │ gemma4:31b   │
+             │                    │    -cloud    │
+             │                    └──────┬───────┘
+             │                           │
+             │                           │ Strict JSON
+             │                           ▼
+             │                    validateAction()
+             │                           │
+             │                 ┌─────────┴─────────┐
+             │                 │                   │
+             │                 ▼                   ▼
+             │            NAVIGATE         DOM ACTIONS
+             │                 │           CLICK / TYPE
+             │                 │           SCROLL / SELECT
+             │                 ▼                   │
+             │         chrome.tabs.update()       │
+             │                                     ▼
+             │                              content.js
+             │                                     │
+             │                                     ▼
+             │                              action-executor.js
+             │                                     │
+             └─────────────────────────────────────┘
+                                                   │
+                                                   ▼
+                                                RESULT
+                                                   │
+                                                   ▼
+                                             Popup Status
 ```
+
+### 🔑 Trust Boundary
+
+The model **never directly executes browser actions**.
+
+Gemma only produces a JSON description of the requested action. `background.js` acts as the trust boundary and validates the model output before any DOM or Chrome API operation is performed.
+
+```text
+Gemma
+  │
+  │ Untrusted JSON
+  ▼
+validateAction()
+  │
+  │ Validated action
+  ▼
+Browser APIs / DOM
+```
+
+---
+
+# 📁 Project Structure
+
+```text
 ai-browser-agent/
-├── manifest.json          Chrome MV3 config (paths below reflect this layout)
-├── test-page.html         Local test fixture with a form, dropdowns, links, scroll content
-├── README.md              This file
 │
-├── frontend/              Popup UI (owner: Uday, for the extension popup itself;
-│   ├── popup.html         the marketing/landing page is a separate deliverable)
+├── manifest.json
+├── test-page.html
+├── README.md
+│
+├── frontend/
+│   ├── popup.html
 │   ├── popup.css
 │   └── popup.js
 │
-├── extension-core/        Orchestration + DOM execution (owner: Mayank)
-│   ├── background.js      Screenshot → Ollama → validate → execute
-│   ├── content.js         Thin bridge into the page
-│   └── action-executor.js CLICK/TYPE/SCROLL/SELECT DOM logic
+├── extension-core/
+│   ├── background.js
+│   ├── content.js
+│   └── action-executor.js
 │
-├── ollama/                Ollama API client (owner: Mayank; model swaps happen here)
-│   └── ollama.js          MODEL constant, system prompt, /api/chat call
+├── ollama/
+│   └── ollama.js
 │
-├── backend/ (placeholder) No server exists yet — see backend/README.md (owner: Adarsh)
-├── ml-models/ (placeholder) No local/on-device model yet — see ml-models/README.md (owner: Nitesh)
-└── database/ (placeholder) No persistence layer planned yet — see database/README.md
+├── backend/
+│   └── README.md
+│
+├── ml-models/
+│   └── README.md
+│
+└── database/
+    └── README.md
 ```
 
-Note: there is no literal "backend" in the client-server sense in Phase 1 —
-`extension-core/` is the closest thing (the orchestration logic), but it
-runs entirely inside the browser and talks straight to local Ollama. A real
-backend only enters the picture if/when Adarsh's design calls for one.
+## Component Responsibilities
 
-### What each file does
+| Component         | Responsibility                            | Owner  |
+| ----------------- | ----------------------------------------- | ------ |
+| `frontend/`       | Extension popup UI                        | Uday   |
+| `extension-core/` | Orchestration and DOM execution           | Mayank |
+| `ollama/`         | Ollama API client and model configuration | Mayank |
+| `backend/`        | Future backend architecture               | Adarsh |
+| `ml-models/`      | Future on-device models                   | Nitesh |
+| `database/`       | Future persistence layer                  | —      |
 
-- **manifest.json** — Declares the extension. Uses `activeTab` (not the
-  broader `tabs` permission) so the extension only ever sees the tab the
-  user is actively interacting with, plus `host_permissions` for
-  `http://localhost:11434/*` so the background worker can call Ollama.
-  Content scripts (`action-executor.js`, `content.js`) are injected into
-  every page (`<all_urls>`) so CLICK/TYPE/SCROLL/SELECT work on whatever
-  page you're testing.
-
-- **popup.html / popup.css / popup.js** — The UI. `popup.js` never talks
-  to Ollama and never touches the target page's DOM directly — it only
-  sends `{type: "EXECUTE_INSTRUCTION", instruction}` to `background.js`
-  and displays whatever status message comes back.
-
-- **background.js** — The orchestrator and the **only** place that
-  decides what happens in the browser. It:
-  1. Finds the active tab.
-  2. Captures a screenshot of it.
-  3. Calls `ollama.js` to get Gemma's JSON action.
-  4. Runs `validateAction()` — a whitelist-based validator that rejects
-     anything that isn't an exact match for one of the 6 known shapes.
-  5. Executes `NAVIGATE` itself via `chrome.tabs.update`, or forwards
-     `CLICK` / `TYPE` / `SCROLL` / `SELECT` to the content script.
-
-- **ollama.js** — The single place that talks to the model. Holds the
-  `MODEL` constant, the system prompt, and the `fetch()` call to
-  Ollama's **native** `/api/chat` endpoint.
-
-- **action-executor.js** — Runs inside the target page (content-script
-  world). Contains all DOM-search and DOM-manipulation code. Never uses
-  `eval()` or `new Function()` — it only reads specific fields
-  (`target`, `text`, `value`, `direction`, `amount`, `x`, `y`) that have
-  already been validated in `background.js`.
-
-- **content.js** — A ~15-line message bridge between `background.js` and
-  `action-executor.js`. Kept separate so the DOM logic in
-  `action-executor.js` stays independent of the messaging plumbing.
-
-- **test-page.html** — A black-and-white local page with a Name input,
-  Email input, a (disabled-by-agent) Password input, Country and Gender
-  `<select>` dropdowns, Submit and Login buttons, eight filler paragraphs
-  for scroll testing, and three external links.
+> `backend/`, `ml-models/`, and `database/` are intentionally placeholders in Phase 1.
 
 ---
 
-## 2. Architecture & data flow
+# 🔄 How It Works
 
-```
-                 USER
-                  │  types instruction, clicks EXECUTE
-                  ▼
-          Extension Popup (popup.html/js)
-                  │  chrome.runtime.sendMessage({type: "EXECUTE_INSTRUCTION", instruction})
-                  ▼
-        Background Service Worker (background.js)
-                  │
-      1. chrome.tabs.query()          → get active tab
-      2. chrome.tabs.captureVisibleTab() → screenshot (PNG, base64)
-      3. ollama.js → POST http://localhost:11434/api/chat
-                      model: gemma4:31b-cloud
-                      messages: [system prompt, {instruction text + image}]
-                      format: "json"
-                  │
-                  │  strict JSON string from Gemma
-                  ▼
-        validateAction(json)   ← untrusted input, whitelist-checked
-                  │
-       ┌──────────┴──────────────────┐
-       ▼                              ▼
- NAVIGATE                     CLICK / TYPE / SCROLL / SELECT
- chrome.tabs.update()         chrome.tabs.sendMessage() → content.js
-                                     → action-executor.js
-                                     (DOM search, x/y fallback)
-                  │
-                  ▼
-               RESULT
-                  │ sendResponse(...)
-                  ▼
-          Popup status line
+## 1. User Instruction
+
+The user enters a natural-language instruction in the extension popup:
+
+```text
+Type Mayank into Name
 ```
 
-The model **never** executes anything. It only returns a JSON
-*description* of an action. `background.js` is the trust boundary: it
-validates every field before anything touches the real DOM or the tabs
-API.
-
----
-
-## 3. Installing and configuring Ollama
-
-1. Install Ollama from https://ollama.com (0.6+ required for cloud
-   models with image input, and this project needs a recent build for
-   `gemma4:*-cloud`).
-2. Sign in for cloud model access:
-   ```
-   ollama signin
-   ```
-3. Pull (register) the cloud model:
-   ```
-   ollama pull gemma4:31b-cloud
-   ```
-   This doesn't download 31B parameters to your machine — `-cloud`
-   models run on Ollama's cloud infrastructure; your local `ollama`
-   binary just proxies requests to it once you're signed in.
-4. **Allow the extension to reach Ollama (CORS).** By default, Ollama's
-   local server only accepts browser requests from a small set of known
-   origins, to prevent malicious web pages from talking to your local
-   Ollama instance. A Chrome extension's background worker has an origin
-   like `chrome-extension://<your-extension-id>`, which is *not* in that
-   default allow-list, so you must explicitly allow it:
-
-   - **macOS/Linux:**
-     ```
-     OLLAMA_ORIGINS="chrome-extension://*" ollama serve
-     ```
-   - **Windows (PowerShell):**
-     ```
-     $env:OLLAMA_ORIGINS="chrome-extension://*"; ollama serve
-     ```
-   If you're running Ollama as a background app rather than via
-   `ollama serve` in a terminal, set `OLLAMA_ORIGINS` as a persistent
-   environment variable and restart the Ollama app.
-
-5. Verify it's reachable:
-   ```
-   curl http://localhost:11434/api/tags
-   ```
-   You should see `gemma4:31b-cloud` in the list once pulled.
-
-## 4. Configuring the model
-
-The model is configured in exactly one place, `ollama.js`:
+The popup sends:
 
 ```js
-export const MODEL = "gemma4:31b-cloud";
+{
+  type: "EXECUTE_INSTRUCTION",
+  instruction: "Type Mayank into Name"
+}
 ```
 
-Change this single line to point at a different Ollama model (local or
-cloud). Everything else in the extension is model-agnostic as long as
-the model supports image input via Ollama's `images` field.
+to `background.js`.
 
 ---
 
-## 5. How each stage works
+## 2. Active Tab Detection
 
-### Screenshot capture
-`background.js` calls `chrome.tabs.captureVisibleTab(windowId, {format:
-"png"})`. This captures **only the visible viewport of the currently
-active tab** — no other tabs, no full-page scroll capture, no
-cross-tab data. It returns a `data:image/png;base64,...` URL; we strip
-the `data:image/png;base64,` prefix before sending the raw base64 to
-Ollama.
+`background.js` identifies the currently active tab.
 
-### Screenshot → Gemma
-`ollama.js` POSTs to `http://localhost:11434/api/chat` (Ollama's
-**native** chat endpoint, not the OpenAI-compatible one — see
-"Limitations" below for why) with:
+The extension uses the `activeTab` permission rather than broad tab access wherever possible.
+
+---
+
+## 3. Screenshot Capture
+
+The visible viewport is captured using:
+
+```js
+chrome.tabs.captureVisibleTab(windowId, {
+  format: "png"
+});
+```
+
+Only the currently visible portion of the active tab is captured.
+
+The resulting:
+
+```text
+data:image/png;base64,...
+```
+
+URL is converted to raw Base64 before being sent to Ollama.
+
+---
+
+## 4. Gemma Reasoning
+
+`ollama.js` sends the instruction and screenshot to Ollama's native `/api/chat` endpoint.
+
+Example request:
+
 ```json
 {
   "model": "gemma4:31b-cloud",
   "format": "json",
   "messages": [
-    { "role": "system", "content": "<strict system prompt>" },
-    { "role": "user", "content": "<instruction>", "images": ["<base64 PNG>"] }
+    {
+      "role": "system",
+      "content": "<strict action-generation prompt>"
+    },
+    {
+      "role": "user",
+      "content": "Type Mayank into Name",
+      "images": [
+        "<base64 screenshot>"
+      ]
+    }
   ]
 }
 ```
-`images` is Ollama's documented field for attaching an image to a chat
-message for any multimodal model; the server handles converting that
-into whatever Gemma 4's native format expects. `format: "json"` tells
-Ollama to constrain generation so the output is always syntactically
-valid JSON (it does not guarantee our *specific* schema — that's what
-validation is for).
 
-### Gemma → JSON
-Gemma looks at the screenshot and the instruction and returns one JSON
-object matching one of the six shapes defined in the system prompt
-(`CLICK`, `TYPE`, `SCROLL`, `SELECT`, `NAVIGATE`, `ERROR`).
-
-### JSON validation
-`validateAction()` in `background.js`:
-- Rejects anything that isn't a plain object.
-- Rejects any `action` value not in the fixed whitelist.
-- For each action type, requires the exact fields (`target`, `text`,
-  `value`, `direction`, `url`, etc.) to be present and of the correct
-  type, discarding anything else the model might have added.
-- Normalizes `x`/`y`/`confidence` to numbers or `null`.
-- Sanitizes `NAVIGATE` URLs with the `URL` constructor and only accepts
-  `http:`/`https:` protocols — `javascript:`, `data:`, and `file:` are
-  rejected outright.
-- Never calls `eval()` or `new Function()` on anything from the model.
-
-### CLICK execution
-`action-executor.js` collects all visible `button`, `[role="button"]`,
-`input[type=submit|button]`, `a`, and `[onclick]` elements, then tries,
-in order: (1) exact case-insensitive text/label match, (2) match after
-stripping punctuation/spacing, (3) substring match — checking
-`innerText`, `aria-label`, `title`, `id`, `name`, and `value`. If no DOM
-match is found, it falls back to `document.elementFromPoint(x, y)`
-using Gemma's coordinates. If neither works, it throws (which
-becomes `✗ Could not find "<target>"` in the popup).
-
-### TYPE execution
-Same 3-tier matching, but candidates are `input` (except `hidden`),
-`textarea`, and `[contenteditable=true]`, matched via `placeholder`,
-`aria-label`, `name`, `id`, and any associated `<label>` (both
-`label[for=id]` and a wrapping `<label>`). Password inputs are
-explicitly rejected before anything is written, per the spec:
-*"Typing into password fields is disabled in this prototype."* On a
-match, the element is focused, its value is set through the native
-`HTMLInputElement`/`HTMLTextAreaElement` value setter (so frameworks
-that listen for real input events still notice the change), and
-`input`/`change` events are dispatched.
-
-### SCROLL execution
-`window.scrollBy({top: direction === "up" ? -amount : amount})`.
-Defaults to `500` pixels if the model omits `amount` or gives an
-invalid one.
-
-### SELECT execution
-Only native `<select>` elements are supported (per Phase 1 scope —
-custom JS dropdowns are out of scope). The same label-matching tiers
-locate the `<select>`, then its `<option>`s are matched by visible text
-first, then by `value` attribute, then by a normalized/partial match.
-`select.value` is set and `input`/`change` events are dispatched.
-
-### NAVIGATE execution
-Handled entirely in `background.js` (not the content script), because
-navigation is a tab-level browser action, not a DOM action:
-`chrome.tabs.update(tabId, {url})`. The URL has already been validated
-to be `http:`/`https:` only.
+Gemma returns a structured action rather than executable code.
 
 ---
 
-## 6. Loading the extension
+# 📋 Supported Actions
 
-1. Open `chrome://extensions`.
-2. Enable **Developer mode** (top-right toggle).
-3. Click **Load unpacked** and select the `ai-browser-agent/` folder.
-4. Pin the extension so its icon is visible in the toolbar.
-5. If you plan to open `test-page.html` directly via a `file://` URL,
-   click **Details** on the extension and enable **"Allow access to
-   file URLs"** — Chrome blocks extensions from file:// pages by
-   default. (Alternatively, serve `test-page.html` from any local HTTP
-   server, e.g. `npx serve .`, and skip this step.)
+Phase 1 supports six action types:
 
-## 7. Testing
+| Action     | Purpose                                               |
+| ---------- | ----------------------------------------------------- |
+| `CLICK`    | Click a visible page element                          |
+| `TYPE`     | Enter text into an input                              |
+| `SCROLL`   | Scroll the page                                       |
+| `SELECT`   | Select an option from a native dropdown               |
+| `NAVIGATE` | Navigate to an HTTP/HTTPS URL                         |
+| `ERROR`    | Report that the requested action cannot be determined |
 
-With Ollama running (`OLLAMA_ORIGINS` set as above) and the extension
-loaded:
+Example:
 
-1. Open `test-page.html`.
-2. Click the extension icon to open the popup.
-3. Try each of these instructions, clicking **EXECUTE** each time:
-   1. `Click the Submit button`
-   2. `Click Login`
-   3. `Type Mayank into Name`
-   4. `Type hello@example.com into Email`
-   5. `Select India from Country`
-   6. `Select Male from Gender`
-   7. `Scroll down`
-   8. `Scroll down 800 pixels`
-   9. `Scroll up`
-   10. `Go to https://google.com`
-4. Watch the **Status** line in the popup for `✓ ...` / `✗ ...`
-   messages.
+```json
+{
+  "action": "CLICK",
+  "target": "Submit"
+}
+```
 
----
+Another example:
 
-## 8. Error handling
-
-| Situation | Popup shows |
-|---|---|
-| Ollama not running / unreachable | `✗ Could not connect to Ollama at http://localhost:11434...` |
-| Model not pulled | `✗ Model "gemma4:31b-cloud" was not found by Ollama. Run "ollama pull ..."` |
-| Request takes too long | `✗ Ollama request timed out after 45s...` |
-| Gemma returns non-JSON text | `✗ Gemma returned malformed JSON: ...` |
-| Gemma returns an unknown/missing action | `✗ Gemma returned an invalid action...` |
-| Gemma itself can't figure out the instruction | `✗ Unable to determine requested action` (or its own `reason`) |
-| Target element not found | `✗ Could not find "Submit"` |
-| Unsafe/invalid NAVIGATE URL | `✗ Blocked unsafe URL scheme "javascript:"...` |
-| Password field TYPE attempt | `✗ Typing into password fields is disabled in this prototype.` |
-| chrome:// / extensions page | `✗ This page is a browser-internal page and cannot be automated...` |
-| Screenshot capture fails | `✗ Screenshot capture failed: ...` |
-
-On success: `✓ Clicked "Submit"`, `✓ Typed "Mayank" into "Name"`,
-`✓ Selected "India" in "Country"`, `✓ Scrolled down 500px`,
-`✓ Navigated to https://google.com`.
+```json
+{
+  "action": "TYPE",
+  "target": "Name",
+  "text": "Mayank"
+}
+```
 
 ---
 
-## 9. Security notes
+# 🛡️ Action Validation
 
-- The model's output is **never** executed as code. No `eval()`, no
-  `new Function()`, no `innerHTML` of model text.
-- Every field from the model passes through `validateAction()`, which
-  only accepts the exact, pre-defined shapes.
-- URLs are parsed with the `URL` constructor and restricted to
-  `http:`/`https:`.
-- Password fields are hard-blocked for `TYPE`.
-- The extension only reads the **active** tab (`activeTab` permission)
-  — no cookies, browsing history, localStorage, or other tabs are ever
-  read or sent anywhere.
-- The screenshot is the only page context sent off-device (to your
-  local Ollama, which then forwards it to Ollama's cloud for the
-  `-cloud` model). Nothing else about the page is transmitted.
+Model output is considered **untrusted input**.
 
----
+Before execution, `validateAction()`:
 
-## 10. Known limitations (read before filing bugs)
+* Verifies the response is a plain object.
+* Checks the `action` against a fixed whitelist.
+* Requires the correct fields for each action.
+* Rejects unexpected or malformed fields.
+* Normalizes numeric values such as `x`, `y`, and `confidence`.
+* Validates navigation URLs.
+* Allows only:
 
-- **`gemma4:31b-cloud` is a very recently released model** (June 2026)
-  and, being a "-cloud" model, requires an internet connection and an
-  Ollama account — it is not a fully local/offline model. If you want a
-  fully offline Phase 1 for testing, swap `MODEL` in `ollama.js` for a
-  locally-pulled vision model (e.g. `gemma3:4b` or `gemma3:12b`) that
-  you've pulled with `ollama pull`.
-- **Endpoint choice matters.** We call Ollama's native `/api/chat`
-  endpoint rather than its OpenAI-compatible `/v1/chat/completions`
-  endpoint. There are documented issues with images being dropped or
-  mishandled by some Ollama cloud vision models specifically when
-  accessed through the OpenAI-compatible endpoint (this was fixed for
-  `gemma3` cloud models but is a good reason to avoid that endpoint
-  generally for vision). The native endpoint with the `images` field is
-  the officially documented, reliable path and is what this project
-  uses throughout.
-- **Coordinates are a fallback, not the primary mechanism.** Gemma 4 is
-  a general vision-language model, not a model specifically trained for
-  pixel-precise GUI grounding. DOM text/label matching is tried first
-  for exactly this reason; `x`/`y` are only used via
-  `document.elementFromPoint()` when DOM matching fails, and may be
-  imprecise on complex or densely-packed layouts.
-- **No full-page screenshots.** `captureVisibleTab` only captures the
-  visible viewport, so Gemma cannot "see" content below the fold. This
-  is intentional for Phase 1 simplicity, per the "screenshot is the
-  only webpage context" requirement.
-- **Custom (non-native) dropdowns are not supported** — only real
-  `<select>` elements, per spec.
-- **Chrome-internal pages cannot be automated** (`chrome://`,
-  `chrome-extension://`, the Chrome Web Store, `about:`, etc.) — this is
-  a hard Chrome platform restriction, not a bug: content scripts are
-  never allowed to run on these pages, no workaround exists or is
-  attempted here.
-- **Manifest V3 service workers are ephemeral.** `background.js` may be
-  unloaded by Chrome when idle and re-started on the next message; this
-  is normal and handled correctly here since the whole pipeline runs
-  inside a single `chrome.runtime.onMessage` handler with no state kept
-  between calls.
-- **Chrome only for Phase 1**, as specified. The code avoids
-  Chrome-only APIs where trivially possible, but no Firefox
-  `manifest.json` variant or `browser.*` polyfill is included yet.
-- **First-party trust, not sandboxing.** This prototype validates the
-  *shape* of the model's output but does not attempt to detect, e.g., a
-  visually-similar phishing overlay tricking Gemma into clicking the
-  wrong "Submit" button. That class of problem is explicitly out of
-  scope for Phase 1.
+  * `http:`
+  * `https:`
+* Rejects dangerous schemes such as:
+
+  * `javascript:`
+  * `data:`
+  * `file:`
+* Prevents password-field typing.
+
+No model-generated value is executed as JavaScript.
+
+### ❌ Never used
+
+```js
+eval(modelOutput);
+```
+
+```js
+new Function(modelOutput);
+```
 
 ---
 
-## 11. What's deliberately NOT in Phase 1
+# 🖱️ DOM Action Execution
 
-Per the phased plan: no DOM-aware context beyond simple label matching,
-no confidence-based confirmation UI, no local/on-device vision model, no
-OCR, no PII detection or redaction, no privacy-preserving transmission
-pipeline, no multi-agent orchestration, no database, no auth. These are
-Phases 2–4.
-#   a i - b r o w s e r - a g e n t 
- 
- 
+DOM operations are handled by:
+
+```text
+content.js
+     │
+     ▼
+action-executor.js
+```
+
+`content.js` is intentionally kept as a thin messaging bridge.
+
+The actual DOM logic lives in `action-executor.js`.
+
+---
+
+## CLICK
+
+The executor searches visible clickable elements such as:
+
+```text
+button
+[role="button"]
+input[type="submit"]
+input[type="button"]
+a
+[onclick]
+```
+
+Matching occurs in multiple stages:
+
+1. Exact case-insensitive match
+2. Normalized text match
+3. Partial/substring match
+
+The following properties may be considered:
+
+```text
+innerText
+aria-label
+title
+id
+name
+value
+```
+
+If DOM matching fails, Gemma-provided `x/y` coordinates may be used as a fallback through:
+
+```js
+document.elementFromPoint(x, y);
+```
+
+DOM matching is preferred because Gemma is a general VLM rather than a pixel-perfect GUI-grounding model.
+
+---
+
+# ⌨️ TYPE
+
+Supported targets include:
+
+```text
+input
+textarea
+[contenteditable=true]
+```
+
+Inputs are matched using:
+
+```text
+placeholder
+aria-label
+name
+id
+label
+```
+
+Both explicit labels:
+
+```html
+<label for="name">Name</label>
+```
+
+and wrapping labels are supported.
+
+The prototype explicitly blocks password fields.
+
+```text
+Password fields → ❌ BLOCKED
+```
+
+Text is inserted using the native input/textarea value setter, followed by:
+
+```text
+input
+change
+```
+
+events so frameworks listening for normal input events can respond.
+
+---
+
+# 📜 SCROLL
+
+Scrolling uses the browser's native API:
+
+```js
+window.scrollBy({
+  top: direction === "up" ? -amount : amount
+});
+```
+
+Default amount:
+
+```text
+500px
+```
+
+Example:
+
+```json
+{
+  "action": "SCROLL",
+  "direction": "down",
+  "amount": 800
+}
+```
+
+---
+
+# 🔽 SELECT
+
+Phase 1 supports native HTML:
+
+```html
+<select>
+```
+
+elements only.
+
+Options are matched by:
+
+1. Visible option text
+2. `value`
+3. Normalized/partial matching
+
+After selection:
+
+```text
+input
+change
+```
+
+events are dispatched.
+
+Custom JavaScript dropdowns are outside the Phase 1 scope.
+
+---
+
+# 🌐 NAVIGATE
+
+Navigation is handled directly by `background.js`:
+
+```js
+chrome.tabs.update(tabId, {
+  url
+});
+```
+
+Before navigation, the URL is parsed using the `URL` constructor.
+
+Only:
+
+```text
+http://
+https://
+```
+
+are allowed.
+
+---
+
+# 🦙 Ollama Setup
+
+## Requirements
+
+* Google Chrome
+* Ollama `0.6+`
+* Ollama account for cloud models
+* Internet connection for `-cloud` models
+
+Install Ollama from:
+
+[Ollama](https://ollama.com?utm_source=chatgpt.com)
+
+---
+
+## 1. Sign in
+
+```bash
+ollama signin
+```
+
+---
+
+## 2. Pull the model
+
+```bash
+ollama pull gemma4:31b-cloud
+```
+
+> `gemma4:31b-cloud` does **not** download 31B parameters to the local machine. The `-cloud` model is served through Ollama's cloud infrastructure.
+
+---
+
+## 3. Configure CORS
+
+Chrome extensions have origins such as:
+
+```text
+chrome-extension://<extension-id>
+```
+
+Therefore, Ollama must allow the extension origin.
+
+### macOS / Linux
+
+```bash
+OLLAMA_ORIGINS="chrome-extension://*" ollama serve
+```
+
+### Windows PowerShell
+
+```powershell
+$env:OLLAMA_ORIGINS="chrome-extension://*"; ollama serve
+```
+
+If Ollama is running as a background application, configure `OLLAMA_ORIGINS` as a persistent environment variable and restart Ollama.
+
+---
+
+## 4. Verify Ollama
+
+```bash
+curl http://localhost:11434/api/tags
+```
+
+The response should include:
+
+```text
+gemma4:31b-cloud
+```
+
+---
+
+# ⚙️ Model Configuration
+
+The model is intentionally configured in a single location:
+
+```text
+ollama/ollama.js
+```
+
+```js
+export const MODEL = "gemma4:31b-cloud";
+```
+
+To use another compatible Ollama vision model, change only this value.
+
+For example:
+
+```js
+export const MODEL = "gemma3:12b";
+```
+
+The rest of the agent remains model-agnostic as long as the selected model supports image input through Ollama.
+
+---
+
+# 🧩 Installing the Extension
+
+### 1. Open Chrome Extensions
+
+Navigate to:
+
+```text
+chrome://extensions
+```
+
+### 2. Enable Developer Mode
+
+Enable **Developer mode** in the top-right corner.
+
+### 3. Load the project
+
+Click:
+
+```text
+Load unpacked
+```
+
+and select:
+
+```text
+ai-browser-agent/
+```
+
+### 4. Pin the extension
+
+Pin the extension to the Chrome toolbar for easier testing.
+
+---
+
+# 🧪 Testing
+
+The repository includes:
+
+```text
+test-page.html
+```
+
+The test fixture contains:
+
+* Name input
+* Email input
+* Password input
+* Country dropdown
+* Gender dropdown
+* Submit button
+* Login button
+* Scrollable content
+* External links
+
+Open `test-page.html` and try:
+
+```text
+1. Click the Submit button
+2. Click Login
+3. Type Mayank into Name
+4. Type hello@example.com into Email
+5. Select India from Country
+6. Select Male from Gender
+7. Scroll down
+8. Scroll down 800 pixels
+9. Scroll up
+10. Go to https://google.com
+```
+
+Expected results include:
+
+```text
+✓ Clicked "Submit"
+✓ Clicked "Login"
+✓ Typed "Mayank" into "Name"
+✓ Selected "India" in "Country"
+✓ Scrolled down 500px
+✓ Navigated to https://google.com
+```
+
+---
+
+# ⚠️ Error Handling
+
+| Condition                   | Result                                         |
+| --------------------------- | ---------------------------------------------- |
+| Ollama unavailable          | `✗ Could not connect to Ollama...`             |
+| Model unavailable           | `✗ Model "gemma4:31b-cloud" was not found...`  |
+| Request timeout             | `✗ Ollama request timed out after 45s...`      |
+| Invalid JSON                | `✗ Gemma returned malformed JSON...`           |
+| Invalid action              | `✗ Gemma returned an invalid action...`        |
+| Action cannot be determined | `✗ Unable to determine requested action`       |
+| Element not found           | `✗ Could not find "..."`                       |
+| Unsafe URL                  | `✗ Blocked unsafe URL scheme...`               |
+| Password input              | `✗ Typing into password fields is disabled...` |
+| Chrome internal page        | `✗ This page is a browser-internal page...`    |
+| Screenshot failure          | `✗ Screenshot capture failed...`               |
+
+---
+
+# 🔐 Security & Privacy
+
+Phase 1 follows a **model-as-untrusted-input** design.
+
+### Security principles
+
+* ❌ No `eval()`
+* ❌ No `new Function()`
+* ❌ No model-generated JavaScript execution
+* ✅ Fixed action whitelist
+* ✅ Strict action validation
+* ✅ URL protocol validation
+* ✅ Password-field protection
+* ✅ DOM APIs for execution
+* ✅ Chrome APIs for browser-level actions
+
+### Data flow
+
+The only webpage context sent to the model pipeline is the screenshot:
+
+```text
+Active Tab
+    │
+    ▼
+Screenshot
+    │
+    ▼
+Local Ollama
+    │
+    ▼
+Ollama Cloud
+    │
+    ▼
+Gemma 4
+```
+
+> **Important:** `gemma4:31b-cloud` is not fully on-device. Although the extension communicates with a local Ollama instance, the cloud model processes the request remotely. A future local vision model will be required for a fully on-device privacy pipeline.
+
+The extension does not intentionally read:
+
+* Cookies
+* Browsing history
+* Other tabs
+* LocalStorage
+* Page databases
+* Password values
+
+---
+
+# 🚧 Phase 1 Limitations
+
+### Visible viewport only
+
+`captureVisibleTab()` captures only the visible viewport.
+
+The agent does not capture the entire page or automatically scroll through the page to build a full screenshot.
+
+### Coordinate accuracy
+
+Coordinates are only a fallback.
+
+DOM matching is preferred because general-purpose VLMs may not provide pixel-perfect GUI grounding.
+
+### Native dropdowns only
+
+Only standard HTML `<select>` elements are supported.
+
+Custom JavaScript dropdowns are not supported.
+
+### Chrome only
+
+Phase 1 targets Chrome Manifest V3.
+
+No Firefox-specific manifest or `browser.*` compatibility layer is included.
+
+### Chrome internal pages
+
+The extension cannot automate pages such as:
+
+```text
+chrome://
+chrome-extension://
+Chrome Web Store
+about:
+```
+
+This is enforced by Chrome's extension security model.
+
+### Ephemeral service worker
+
+Manifest V3 service workers can be unloaded and restarted by Chrome.
+
+Phase 1 does not depend on persistent in-memory state between executions.
+
+---
+
+# 🗺️ Roadmap
+
+Phase 1 establishes the basic browser-agent loop:
+
+```text
+Instruction
+     ↓
+Screenshot
+     ↓
+Vision-Language Model
+     ↓
+Structured Action
+     ↓
+Validation
+     ↓
+Browser Execution
+```
+
+Future phases will extend this foundation.
+
+| Phase       | Planned Capability                                           |
+| ----------- | ------------------------------------------------------------ |
+| **Phase 1** | Screenshot → Gemma → validated browser action                |
+| **Phase 2** | Better DOM/context awareness, confidence handling            |
+| **Phase 3** | On-device visual perception, OCR, local models               |
+| **Phase 4** | PII detection, redaction, privacy-preserving pipeline        |
+| **Future**  | Multi-agent orchestration, backend, database, authentication |
+
+---
+
+# 🎯 Phase 1 Scope
+
+### Included
+
+```text
+Natural-language instructions
+        ↓
+Active-tab screenshot
+        ↓
+Gemma 4 reasoning
+        ↓
+Strict JSON action
+        ↓
+Whitelist validation
+        ↓
+Local browser execution
+```
+
+### Not Included
+
+```text
+❌ OCR
+❌ PII detection
+❌ PII redaction
+❌ Local vision model
+❌ Privacy-preserving transmission
+❌ Multi-agent orchestration
+❌ Database
+❌ Authentication
+❌ Confidence-based confirmation UI
+❌ Advanced DOM context
+```
+
+---
+
+# 🧠 Design Philosophy
+
+The core principle of Phase 1 is:
+
+> **The model decides what should happen; the browser decides whether it is safe to execute.**
+
+Gemma provides **reasoning and action selection**, while deterministic extension code provides **validation and execution**.
+
+This separation keeps the LLM outside the execution trust boundary and provides a foundation for progressively adding local perception and privacy mechanisms in later phases.
+
+---
+
+## 📌 Status
+
+**Phase 1 — Prototype**
+
+The current implementation is intended for controlled testing and experimentation rather than unrestricted browser automation.
+
+---
