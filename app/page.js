@@ -22,26 +22,6 @@ export default function ChatPage() {
   const [currentStep, setCurrentStep] = useState(null);
   const [isTaskRunning, setIsTaskRunning] = useState(false);
 
-  const voiceAgent = useVoiceAgent({
-    onResponse: (transcript) => {
-      const userMsg = { role: 'user', content: transcript, timestamp: new Date() };
-      setMessages((prev) => [...prev, userMsg]);
-
-      if (isLaptopQuery(transcript)) {
-        runLaptopSearch(transcript);
-      } else {
-        setTimeout(() => {
-          const agentMsg = {
-            role: 'agent',
-            content: "I'm PAROKSH, your AI browser agent. How can I help you today?",
-            timestamp: new Date(),
-          };
-          setMessages((prev) => [...prev, agentMsg]);
-        }, 800);
-      }
-    },
-  });
-
   const isLaptopQuery = (text) => {
     const lower = text.toLowerCase();
     return LAPTOP_KEYWORDS.some((kw) => lower.includes(kw));
@@ -143,6 +123,26 @@ export default function ChatPage() {
     setIsTaskRunning(false);
     setCurrentStep(null);
   };
+
+  const voiceAgent = useVoiceAgent({
+    onResponse: (transcript) => {
+      const userMsg = { role: 'user', content: transcript, timestamp: new Date() };
+      setMessages((prev) => [...prev, userMsg]);
+
+      if (isLaptopQuery(transcript)) {
+        runLaptopSearch(transcript);
+      } else {
+        setTimeout(() => {
+          const agentMsg = {
+            role: 'agent',
+            content: "I'm PAROKSH, your AI browser agent. How can I help you today?",
+            timestamp: new Date(),
+          };
+          setMessages((prev) => [...prev, agentMsg]);
+        }, 800);
+      }
+    },
+  });
 
   return (
     <FloatingChatWindow

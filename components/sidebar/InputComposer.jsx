@@ -111,7 +111,10 @@ export function InputComposer({
                 hidden
                 onChange={handleFileUpload}
               />
+            </div>
 
+            {/* Right: Mic + Send */}
+            <div className="flex items-center gap-1">
               {voiceAgent && (
                 <VoiceButton
                   voiceState={voiceAgent.state}
@@ -125,22 +128,21 @@ export function InputComposer({
                   size="sm"
                 />
               )}
-            </div>
 
-            {/* Right: Send */}
-            <Button
-              type="submit"
-              size="icon"
-              disabled={isInputEmpty || disabled}
-              className={cn(
-                'h-8 w-8 rounded-full',
-                'bg-secondary hover:bg-secondary/80',
-                'disabled:opacity-30 disabled:cursor-not-allowed'
-              )}
-              title="Send"
-            >
-              <Send className="h-4 w-4" />
-            </Button>
+              <Button
+                type="submit"
+                size="icon"
+                disabled={isInputEmpty || disabled}
+                className={cn(
+                  'h-8 w-8 rounded-full',
+                  'bg-slate-800 hover:bg-slate-700 text-white',
+                  'disabled:opacity-30 disabled:cursor-not-allowed'
+                )}
+                title="Send"
+              >
+                <Send className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
       </form>
