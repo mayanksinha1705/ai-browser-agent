@@ -1,5 +1,6 @@
 import { Inter, JetBrains_Mono } from 'next/font/google';
 import { ThemeProvider } from '@/components/theme-provider';
+import { EmbedModeHandler } from '@/components/EmbedModeHandler';
 import './globals.css';
 
 const inter = Inter({
@@ -39,7 +40,8 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${inter.variable} ${mono.variable}`} suppressHydrationWarning>
-      <body className="font-sans antialiased bg-background text-foreground overflow-hidden">
+      <body className="font-sans antialiased bg-background text-foreground">
+        <EmbedModeHandler />
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

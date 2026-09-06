@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChatHeader } from '@/components/sidebar/ChatHeader';
 import { ResizeHandles } from '@/components/sidebar/ResizeHandle';
@@ -8,7 +8,8 @@ import { EmptyState } from '@/components/sidebar/EmptyState';
 import { ChatInterface } from '@/components/sidebar/ChatInterface';
 import { AgentExecutionPanel } from '@/components/sidebar/AgentExecutionPanel';
 import { InputComposer } from '@/components/sidebar/InputComposer';
-import VoiceCircleOverlay from '@/components/sidebar/VoiceVisualizer';import { useDraggable } from '@/hooks/useDraggable';
+import VoiceCircleOverlay from '@/components/sidebar/VoiceVisualizer';
+import { useDraggable } from '@/hooks/useDraggable';
 import { useResizable } from '@/hooks/useResizable';
 import { WINDOW_SIZE, AGENT_STATUS } from '@/lib/constants';
 
@@ -22,6 +23,7 @@ export function FloatingChatWindow({
   isTaskRunning,
   onStop,
   voiceAgent,
+  isEmbedded = false,
 }) {
   const headerRef = useRef(null);
 
@@ -44,6 +46,13 @@ export function FloatingChatWindow({
   const [isVisible, setIsVisible] = useState(true);
   const [preMaximize, setPreMaximize] = useState(null);
 
+  // Send resize updates to parent (content script) in embedded mode
+  const notifyParentResize = useCallback((width, height) => {
+    if (isEmbedded && typeof window !== 'undefined') {
+      window.parent.postMessage({ type: 'updateSize', width, height }, '*');
+    }
+  }, [isEmbedded]);
+
   const handleDragStart = (e) => {
     if (isResizing) return;
     startDrag(e, headerRef);
@@ -53,6 +62,13 @@ export function FloatingChatWindow({
     if (isDragging) return;
     startResize(e, direction);
   };
+
+  // Notify parent when size changes in embedded mode
+  useEffect(() => {
+    if (isEmbedded) {
+      notifyParentResize(size.width, size.height);
+    }
+  }, [size.width, size.height, isEmbedded, notifyParentResize]);
 
   const handleMaximize = () => {
     if (isMaximized) {
@@ -69,6 +85,9 @@ export function FloatingChatWindow({
 
   const handleClose = () => {
     setIsVisible(false);
+    if (isEmbedded && typeof window !== 'undefined') {
+      window.parent.postMessage({ type: 'paroksh/hide' }, '*');
+    }
   };
 
   const handleResetSize = () => {
@@ -99,6 +118,80 @@ export function FloatingChatWindow({
     );
   }
 
+  if (isEmbedded) {
+    // In embedded mode the iframe is hosted, dragged, and resized by the
+    // extension's content script. The React app fills the container and
+    // communicates size changes back to the content script.
+    return (
+      <div className="relative z-[1] w-full h-full flex flex-col overflow-hidden bg-background">
+        <div className="border-b border-border/30">
+          <ChatHeader
+            agentStatus={AGENT_STATUS.READY}
+            isDragging={false}
+            onMaximize={() => {}}
+            isMaximized={false}
+            onClose={handleClose}
+            onResetSize={() => {}}
+            onNewSession={onNewSession}
+          />
+        </div>
+
+        {/* Resize handles - visible in embedded mode for easy resizing */}
+        <ResizeHandles
+          onResizeStart={handleResizeStart}
+          isResizing={isResizing}
+        />
+
+        <VoiceCircleOverlay
+          voiceState={voiceAgent?.state}
+          audioLevels={voiceAgent?.audioLevels}
+          streamingResponse={voiceAgent?.streamingResponse}
+          onCancel={() => voiceAgent?.toggleListening()}
+        />
+
+        <div className="relative flex-1 flex flex-col overflow-hidden">
+          <AnimatePresence mode="wait">
+            {showEmptyState ? (
+              <motion.div
+                key="empty"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="flex-1 flex items-center justify-center"
+              >
+                <EmptyState userName="UDAY" />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="content"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="flex-1 flex flex-col overflow-hidden"
+              >
+                <ChatInterface messages={messages} voiceAgent={voiceAgent} />
+
+                {isTaskRunning && currentStep && (
+                  <AgentExecutionPanel currentStep={currentStep} onStop={onStop} />
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <InputComposer
+            onSend={onSendMessage}
+            onSendImage={onSendImage}
+            onSendFile={onSendFile}
+            disabled={isTaskRunning}
+            voiceAgent={voiceAgent}
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <motion.div
       className="fixed z-[9999]"
@@ -118,7 +211,6 @@ export function FloatingChatWindow({
         className="relative h-full flex flex-col rounded-xl border border-border/30 bg-background overflow-hidden"
         onMouseDown={(e) => e.stopPropagation()}
       >
-        {/* Header / Drag Bar */}
         <div
           ref={headerRef}
           className="cursor-grab active:cursor-grabbing border-b border-border/30"
@@ -135,13 +227,11 @@ export function FloatingChatWindow({
           />
         </div>
 
-        {/* Resize Handles */}
         <ResizeHandles
           onResizeStart={handleResizeStart}
           isResizing={isResizing}
         />
 
-        {/* Voice Circle Overlay (inside window, not fullscreen) */}
         <VoiceCircleOverlay
           voiceState={voiceAgent?.state}
           audioLevels={voiceAgent?.audioLevels}
@@ -149,7 +239,6 @@ export function FloatingChatWindow({
           onCancel={() => voiceAgent?.toggleListening()}
         />
 
-        {/* Content Area */}
         <div className="relative flex-1 flex flex-col overflow-hidden">
           <AnimatePresence mode="wait">
             {showEmptyState ? (

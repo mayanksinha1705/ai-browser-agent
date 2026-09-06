@@ -246,3 +246,226 @@
   cursor: grabbing;
   user-select: none;
 }
+
+/* Orb voice agent */
+.orb {
+  position: relative;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(circle at center, #0a0a0a, #001a1a);
+  animation: float 6s ease-in-out infinite, pulse 4s infinite ease-in-out;
+  box-shadow:
+    0 0 60px rgba(0, 255, 200, 0.9),
+    0 0 140px rgba(0, 200, 255, 0.7),
+    0 0 240px rgba(200, 0, 255, 0.5);
+  overflow: hidden;
+}
+
+.orb::before {
+  content: "";
+  position: absolute;
+  inset: -100%;
+  background: conic-gradient(
+    from 0deg,
+    #00ffff,
+    #00ffcc,
+    #ff00ff,
+    #ff6600,
+    #ff0000,
+    #6600ff,
+    #00ffff
+  );
+  animation: spin 8s linear infinite;
+  filter: blur(100px);
+  opacity: 0.8;
+  mix-blend-mode: screen;
+}
+
+.orb::after {
+  content: "";
+  position: absolute;
+  inset: -50%;
+  background: repeating-radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.2) 0px,
+    rgba(255, 255, 255, 0.05) 80px,
+    transparent 150px
+  );
+  filter: blur(80px);
+  animation: gasFlow 30s infinite linear;
+  opacity: 0.9;
+  mix-blend-mode: lighten;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.orb .aura {
+  position: absolute;
+  inset: -20%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0, 255, 255, 0.2), transparent 70%);
+  animation: auraPulse 6s ease-in-out infinite;
+  filter: blur(40px);
+}
+
+.orb .core {
+  position: absolute;
+  inset: 30%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.9),
+    transparent 70%
+  );
+  filter: blur(12px);
+  opacity: 0.7;
+}
+
+.orb .ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  border: 2px dashed rgba(0, 255, 255, 0.4);
+  animation: ringSpin 20s linear infinite;
+  box-shadow: 0 0 25px rgba(0, 255, 255, 0.3);
+}
+
+.orb .particles {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.orb .particles span {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: radial-gradient(circle, #fff, transparent);
+  border-radius: 50%;
+  opacity: 0;
+  animation: particleFloat 6s infinite;
+}
+
+.orb .particles span:nth-child(1) {
+  top: 20%;
+  left: 40%;
+  animation-delay: 0s;
+}
+.orb .particles span:nth-child(2) {
+  top: 60%;
+  left: 70%;
+  animation-delay: 1s;
+}
+.orb .particles span:nth-child(3) {
+  top: 50%;
+  left: 25%;
+  animation-delay: 2s;
+}
+.orb .particles span:nth-child(4) {
+  top: 35%;
+  left: 55%;
+  animation-delay: 3s;
+}
+.orb .particles span:nth-child(5) {
+  top: 70%;
+  left: 45%;
+  animation-delay: 4s;
+}
+.orb .particles span:nth-child(6) {
+  top: 25%;
+  left: 65%;
+  animation-delay: 5s;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-25px) scale(1.08);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 70px #00ffcc,
+      0 0 160px #00ffff,
+      0 0 260px #ff00ff;
+  }
+  50% {
+    box-shadow:
+      0 0 100px #ff00ff,
+      0 0 200px #ff6600,
+      0 0 300px #6600ff;
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes gasFlow {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.1);
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+  }
+}
+
+@keyframes auraPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.9;
+  }
+}
+
+@keyframes ringSpin {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@keyframes particleFloat {
+  0% {
+    transform: translateY(0) scale(0.5);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(-20px) scale(1);
+    opacity: 0.8;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-40px) scale(0.3);
+    opacity: 0;
+  }
+}

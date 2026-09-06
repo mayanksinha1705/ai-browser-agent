@@ -51,9 +51,9 @@ export const SIDEBAR_WIDTH = {
 
 // Floating window dimensions
 export const WINDOW_SIZE = {
-  DEFAULT: { W: 420, H: 640 },
-  MIN: { W: 10, H: 10 },
-  MAX: { W: 700, H: 900 },
+  DEFAULT: { W: 380, H: 520 },
+  MIN: { W: 320, H: 420 },
+  MAX: { W: 500, H: 750 },
 };
 
 // Status Display Config

@@ -21,26 +21,75 @@ export default function ChatPage() {
   const [messages, setMessages] = useState([]);
   const [currentStep, setCurrentStep] = useState(null);
   const [isTaskRunning, setIsTaskRunning] = useState(false);
+  const [isEmbedded, setIsEmbedded] = useState(false);
 
-  const voiceAgent = useVoiceAgent({
-    onResponse: (transcript) => {
-      const userMsg = { role: 'user', content: transcript, timestamp: new Date() };
-      setMessages((prev) => [...prev, userMsg]);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('embed') === 'extension') {
+      setIsEmbedded(true);
+      document.documentElement.setAttribute('data-embed', 'extension');
+    }
+  }, []);
 
-      if (isLaptopQuery(transcript)) {
-        runLaptopSearch(transcript);
-      } else {
-        setTimeout(() => {
-          const agentMsg = {
-            role: 'agent',
-            content: "I'm PAROKSH, your AI browser agent. How can I help you today?",
-            timestamp: new Date(),
-          };
-          setMessages((prev) => [...prev, agentMsg]);
-        }, 800);
-      }
-    },
-  });
+  // ---- Persistent state + active-tab wiring (side panel mode) ----
+  useEffect(() => {
+    if (!isEmbedded) return;
+    if (typeof chrome === 'undefined' || !chrome.runtime?.sendMessage) return;
+
+    const isExtensionContext = typeof chrome.runtime?.id === 'string';
+
+    // Restore persisted state.
+    if (isExtensionContext) {
+      chrome.runtime.sendMessage({ type: 'paroksh/load-state' }, (res) => {
+        if (chrome.runtime.lastError) return;
+        if (res?.state?.messages) setMessages(res.state.messages);
+        if (typeof res?.state?.isTaskRunning === 'boolean') setIsTaskRunning(res.state.isTaskRunning);
+      });
+    }
+
+    // Listen for active-tab changes from the background.
+    const onMessage = (event) => {
+      const data = event.data;
+      if (!data || data.type !== 'paroksh/active-tab') return;
+      // We can use this later to auto-attach page context to the conversation.
+    };
+    window.addEventListener('message', onMessage);
+
+    // Persist state on changes (debounced).
+    let saveTimer = null;
+    const persist = () => {
+      if (!isExtensionContext) return;
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(() => {
+        chrome.runtime.sendMessage({
+          type: 'paroksh/save-state',
+          state: { messages, isTaskRunning },
+        });
+      }, 400);
+    };
+
+    // Initial active-tab broadcast.
+    if (isExtensionContext) {
+      chrome.runtime.sendMessage({ type: 'paroksh/get-active-tab' }, () => {
+        void chrome.runtime.lastError;
+      });
+    }
+
+    const unsub = () => window.removeEventListener('message', onMessage);
+    return () => { unsub(); clearTimeout(saveTimer); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEmbedded]);
+
+  // Persist on every state change.
+  useEffect(() => {
+    if (!isEmbedded) return;
+    if (typeof chrome === 'undefined' || !chrome.runtime?.id) return;
+    chrome.runtime.sendMessage({
+      type: 'paroksh/save-state',
+      state: { messages, isTaskRunning },
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages, isTaskRunning, isEmbedded]);
 
   const isLaptopQuery = (text) => {
     const lower = text.toLowerCase();
@@ -144,6 +193,26 @@ export default function ChatPage() {
     setCurrentStep(null);
   };
 
+  const voiceAgent = useVoiceAgent({
+    onResponse: (transcript) => {
+      const userMsg = { role: 'user', content: transcript, timestamp: new Date() };
+      setMessages((prev) => [...prev, userMsg]);
+
+      if (isLaptopQuery(transcript)) {
+        runLaptopSearch(transcript);
+      } else {
+        setTimeout(() => {
+          const agentMsg = {
+            role: 'agent',
+            content: "I'm PAROKSH, your AI browser agent. How can I help you today?",
+            timestamp: new Date(),
+          };
+          setMessages((prev) => [...prev, agentMsg]);
+        }, 800);
+      }
+    },
+  });
+
   return (
     <FloatingChatWindow
       messages={messages}
@@ -155,6 +224,7 @@ export default function ChatPage() {
       isTaskRunning={isTaskRunning}
       onStop={handleStop}
       voiceAgent={voiceAgent}
+      isEmbedded={isEmbedded}
     />
   );
 }

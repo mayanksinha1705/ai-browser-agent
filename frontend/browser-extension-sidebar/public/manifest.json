@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "PAROKSH - AI Browser Agent",
-  "version": "1.0.0",
-  "description": "PAROKSH is your intelligent AI browser agent that lives as a floating chatbot on any webpage. Drag, resize, and chat with your AI assistant that can browse, search, and complete tasks for you.",
+  "version": "1.0.1",
+  "description": "AI browser agent that follows you across tabs as a persistent floating window.",
   "icons": {
     "16": "icons/icon16.png",
     "32": "icons/icon32.png",
@@ -10,8 +10,7 @@
     "128": "icons/icon128.png"
   },
   "action": {
-    "default_popup": "popup.html",
-    "default_title": "PAROKSH - AI Browser Agent"
+    "default_title": "Open PAROKSH"
   },
   "content_scripts": [
     {
@@ -21,9 +20,20 @@
       "run_at": "document_idle"
     }
   ],
-  "permissions": ["activeTab", "scripting"],
-  "host_permissions": ["<all_urls>"],
-  "content_security_policy": {
-    "extension_pages": "script-src 'self' 'unsafe-eval'; object-src 'self'"
-  }
+  "web_accessible_resources": [
+    {
+      "resources": ["content/*"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage",
+    "tabs"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "host_permissions": ["<all_urls>"]
 }
