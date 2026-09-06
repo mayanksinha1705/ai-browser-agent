@@ -68,20 +68,19 @@ export function InputComposer({
             placeholder={voiceAgent?.isListening ? 'Listening...' : 'Type a message...'}
             disabled={disabled || voiceAgent?.isListening}
             rows={1}
-            className="min-h-[40px] max-h-32 w-full resize-none bg-transparent border-0 px-3 pt-2.5 pb-8 text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
+            className="min-h-[40px] max-h-32 w-full resize-none bg-transparent border-0 px-3 pt-2.5 pb-10 text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
           />
 
-          <div className="absolute bottom-1 inset-x-0 flex items-center justify-between px-2">
+          <div className="absolute bottom-1.5 inset-x-0 flex items-center justify-between px-2">
             {/* Left: Photo, File, Mic */}
             <div className="flex items-center gap-1">
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 text-muted-foreground hover:text-blue-400"
-                title="Upload photo"
-                onClick={() => imageInputRef.current?.click()}
-                disabled={disabled}
+                className="h-7 w-7 text-muted-foreground hover:text-blue-400 opacity-50"
+                title="Upload photo (disabled - no backend)"
+                disabled={true}
               >
                 <Image className="h-4 w-4" />
               </Button>
@@ -111,7 +110,10 @@ export function InputComposer({
                 hidden
                 onChange={handleFileUpload}
               />
+            </div>
 
+            {/* Right: Mic + Send */}
+            <div className="flex items-center gap-1">
               {voiceAgent && (
                 <VoiceButton
                   voiceState={voiceAgent.state}
@@ -125,22 +127,21 @@ export function InputComposer({
                   size="sm"
                 />
               )}
-            </div>
 
-            {/* Right: Send */}
-            <Button
-              type="submit"
-              size="icon"
-              disabled={isInputEmpty || disabled}
-              className={cn(
-                'h-8 w-8 rounded-full',
-                'bg-secondary hover:bg-secondary/80',
-                'disabled:opacity-30 disabled:cursor-not-allowed'
-              )}
-              title="Send"
-            >
-              <Send className="h-4 w-4" />
-            </Button>
+              <Button
+                type="submit"
+                size="icon"
+                disabled={isInputEmpty || disabled}
+                className={cn(
+                  'h-8 w-8 rounded-full',
+                  'bg-slate-800 hover:bg-slate-700 text-white',
+                  'disabled:opacity-30 disabled:cursor-not-allowed'
+                )}
+                title="Send"
+              >
+                <Send className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
       </form>

@@ -1,123 +1,157 @@
-# PAROKSH - AI Browser Agent (Floating Chatbot)
+# PAROKSH - AI Browser Agent (Floating Chatbot Extension)
 
-A floating, draggable, resizable AI browser agent that works as a chatbot on **any webpage** — just like the Google Meet overlay.
+A floating, draggable, resizable AI browser agent that works as a chatbot on any webpage. Inspired by ChatGPT's voice orb, it supports text, voice, photo, and file inputs.
 
-## What Changed
+**Live demo:** http://localhost:3002
 
-The extension has been transformed from a **fixed sidebar** to a **floating chatbot window** that:
+## Features
 
-- **Floats over any webpage** via a content script (works on Google Meet, Gmail, docs, etc.)
-- **Draggable anywhere** — grab the header and move it freely across the screen
-- **Resizable in all directions** — drag any edge or corner to resize width, height, or both
-- **Chatbot-style UI** — Gemini-inspired message bubbles, typing indicators, gradient accents
-- **Window controls** — minimize (collapse to floating "AI" pill), maximize, close
-- **Position & size persistence** — remembers your preferred position and size via localStorage
+### Floating Window
+- **Draggable** — Grab the header bar and move anywhere on screen
+- **Resizable** — Drag any edge or corner; minimum 10px, maximum 700×900px
+- **Minimize** — Collapses to a small floating "AI" pill at bottom-right
+- **Maximize** — Fills the viewport
+- **Close** — Hides the window; click the "AI" pill to reopen
+- **Keyboard shortcut** — `Ctrl/Cmd + Shift + I` toggles the window
 
-## Quick Start
+### Chat Interface
+- Clean text-based chat bubbles (no heavy boxes)
+- Agent messages have light grey background with border
+- Auto-scroll to bottom on new messages
+- Works in small window sizes
 
-### Development (UI Preview)
+### Voice Agent (Orb Style)
+- **Toggle mic** — Single click to start/stop listening
+- **CSS Orb animation** — ChatGPT-style orb with:
+  - Radial gradient background
+  - Spinning conic gradient
+  - Floating particles
+  - Pulsing rings
+  - Float + pulse animations
+- **No blur** — Extension tabs remain visible while orb is active
+- **Cancel button** — X icon to stop the voice agent
+- **Speech-to-text** — Uses Web Speech API
+- **Text-to-speech** — Agent responds with audio playback
+- **VAD** — Voice Activity Detection via Web Audio API
 
-```bash
-cd browser-extension-sidebar
-npm run dev
-```
+### Input Composer
+- **Photo upload** — Image icon (blue accent)
+- **File attach** — Paperclip icon
+- **Microphone** — Mic button on the right side
+- **Send** — Send button next to mic
+- **Enter** to send, **Shift+Enter** for new line
 
-Open [http://localhost:3002](http://localhost:3002) — the floating chat window appears in the browser like it would on any webpage.
+### Demo Flow
+- Type "laptop" or "find laptop" to trigger the laptop search demo
+- Shows step-by-step processing (current step only)
+- Returns laptop comparison results with prices, specs, and ratings
 
-### Browser Extension (Content Script)
-
-1. Build the project:
-   ```bash
-   npm run build
-   ```
-
-2. Load the extension in Chrome:
-   - Go to `chrome://extensions`
-   - Enable "Developer mode"
-   - Click "Load unpacked"
-   - Select the `browser-extension-sidebar/public` directory
-   - **Note:** Update `APP_URL` in `content/content-script.js` to point to your deployed app URL (or `http://localhost:3002` for local dev)
-
-3. Click the extension icon → "Open Chat Window" or press `Ctrl/Cmd + Shift + I`
+### Header Controls
+- **New Session** (＋) — Clears chat and stops audio
+- **Settings** (⚙) — Dropdown with:
+  - Reset size
+  - Maximize/Restore
+  - Close
+  - Theme toggle (light/dark/system)
 
 ## Project Structure
 
 ```
 browser-extension-sidebar/
 ├── app/
-│   ├── page.js                  # Main page (embed detection, state management)
-│   ├── layout.js                # Root layout (ThemeProvider)
-│   └── globals.css              # Tailwind + custom chatbot styles
+│   ├── page.js                  # Main chat page with voice agent
+│   ├── layout.js                # Root layout with ThemeProvider
+│   └── globals.css              # Tailwind + orb CSS animations
 ├── components/
 │   ├── sidebar/
-│   │   ├── FloatingChatWindow.jsx   # Main floating window (drag, resize, maximize)
-│   │   ├── ChatHeader.jsx           # Draggable header with window controls
+│   │   ├── FloatingChatWindow.jsx   # Main draggable/resizable container
+│   │   ├── ChatHeader.jsx           # Header with drag bar + controls
+│   │   ├── ChatInterface.jsx        # Chat bubbles + auto-scroll
+│   │   ├── InputComposer.jsx        # Text input + photo/file/mic buttons
+│   │   ├── VoiceButton.jsx          # Mic toggle button
+│   │   ├── VoiceVisualizer.jsx      # CSS orb voice agent overlay
+│   │   ├── AgentExecutionPanel.jsx  # Current step display
+│   │   ├── EmptyState.jsx           # "Hello, Username" greeting
 │   │   ├── ResizeHandle.jsx         # 8-direction resize handles
-│   │   ├── ChatInterface.jsx        # Chat bubbles + typing indicator
-│   │   ├── InputComposer.jsx        # Message input bar
-│   │   ├── EmptyState.jsx           # Welcome screen with suggestion chips
-│   │   ├── AgentExecutionPanel.jsx  # Agent step timeline
-│   │   ├── BrowserActivityLog.jsx   # Browser action log
-│   │   ├── ConfirmationDialog.jsx   # Confirmation prompt
-│   │   ├── TaskCompletion.jsx       # Task complete screen
-│   │   ├── ThemeToggle.jsx          # Light/dark/system toggle
-│   │   └── CurrentPageContext.jsx   # Current page info
-│   └── ui/                        # shadcn/ui primitives
+│   │   └── ThemeToggle.jsx          # Light/dark/system theme
+│   └── ui/                        # shadcn/ui components
 ├── hooks/
-│   ├── useDraggable.js            # Drag logic with position persistence
-│   ├── useResizable.js            # Resize logic (all 8 directions)
-│   └── use-local-storage.js       # Local storage hooks
+│   ├── useDraggable.js            # Window drag logic + position persistence
+│   ├── useResizable.js            # Window resize logic + size persistence
+│   ├── useSpeechRecognition.js    # Web Speech API wrapper
+│   └── useVoiceAgent.js           # Voice agent state machine + VAD + TTS
 ├── lib/
-│   ├── constants.js              # Agent/window constants
-│   ├── mock-agent.js             # Mock agent (demo)
-│   ├── agent-emitter.js          # Event emitter
-│   ├── demo-flows.js             # Demo flows (laptop search, form fill)
-│   └── research-flow.js          # Research demo flow
+│   ├── constants.js               # Window sizes, agent status config
+│   ├── laptop-search-flow.js      # Laptop search demo flow
+│   └── utils.js                   # cn() helper
 ├── content/
-│   ├── content-script.js         # Injects floating chat into any webpage
+│   ├── content-script.js          # Injects chat into any webpage
 │   └── content-script.css
-├── public/
-│   ├── manifest.json             # Chrome extension manifest V3
-│   ├── popup.html                # Browser action popup
-│   └── icons/                    # Extension icons
-└── package.json
+└── public/
+    ├── manifest.json              # Chrome Extension V3 manifest
+    ├── popup.html                 # Browser action popup
+    └── icons/                     # Extension icons
 ```
-
-## Features
-
-### Floating Window Controls
-
-| Action | How |
-|--------|-----|
-| **Drag** | Grab the header bar and move anywhere |
-| **Resize** | Drag any edge or corner handle |
-| **Minimize** | Click the `ー` button (collapses to floating "AI" pill) |
-| **Maximize** | Click the `□` button (fills viewport) |
-| **Close** | Click the `×` button (minimizes to floating pill) |
-| **Toggle via shortcut** | `Ctrl/Cmd + Shift + I` |
-
-### Window Sizes
-
-- **Default:** 420 × 640 px
-- **Minimum:** 300 × 400 px
-- **Maximum:** 700 × 900 px
-- Position and size are saved to localStorage
-
-### Demo Flows
-
-1. **Laptop Search** — Finds and compares gaming laptops with results
-2. **Form Filling** — Auto-fills forms with human confirmation
-3. **Research** — Multi-source research with structured summary
 
 ## Tech Stack
 
-- **Next.js 15** — App router, React Server Components
-- **React 18** — UI with hooks
+- **Next.js 15** — App router
+- **React 18** — UI components
 - **Tailwind CSS** — Styling
 - **Framer Motion** — Animations
 - **Lucide React** — Icons
+- **Web Speech API** — Speech recognition + TTS
+- **Web Audio API** — Voice Activity Detection
 - **Chrome Extension Manifest V3** — Content script injection
+
+## Getting Started
+
+### Install Dependencies
+```bash
+cd browser-extension-sidebar
+npm install
+```
+
+### Development
+```bash
+npm run dev
+```
+Open http://localhost:3002
+
+### Build
+```bash
+npm run build
+```
+
+### Browser Extension
+1. Build the project
+2. Go to `chrome://extensions`
+3. Enable "Developer mode"
+4. Click "Load unpacked" → select `public/` folder
+5. Click the extension icon to open the chat window
+
+## Voice Agent States
+
+| State | Description |
+|-------|-------------|
+| `idle` | Default state, mic button available |
+| `listening` | Mic active, waiting for speech |
+| `recording` | Speech detected, recording |
+| `processing` | Processing voice input |
+| `speaking` | Agent is speaking via TTS |
+| `streaming` | Streaming response text |
+
+## Customization
+
+- **Window size:** Edit `WINDOW_SIZE` in `lib/constants.js`
+- **Orb size:** Change `width/height` in `VoiceVisualizer.jsx`
+- **Voice agent threshold:** Adjust `vadThreshold` in `useVoiceAgent.js`
+- **Demo flow:** Modify `LAPTOP_SEARCH_FLOW` in `lib/laptop-search-flow.js`
 
 ## Backend Integration
 
-The architecture is event-driven via `lib/agent-emitter.js`. Replace the mock agent in `lib/mock-agent.js` with real backend calls. Key integration points are marked with comments.
+The frontend is ready for backend integration. The `useVoiceAgent` hook accepts an `onResponse` callback. Replace the mock responses in `app/page.js` with real API calls to your backend.
+
+---
+
+Built with Next.js, Tailwind CSS, and Framer Motion.

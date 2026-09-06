@@ -44,7 +44,6 @@ export function useDraggable(initialPosition = null) {
       const newX = startPosRef.current.x + deltaX;
       const newY = startPosRef.current.y + deltaY;
 
-      // Keep within viewport bounds
       const maxX = window.innerWidth - 240;
       const maxY = window.innerHeight - 200;
       const clampedX = Math.max(16, Math.min(newX, maxX));
@@ -66,7 +65,6 @@ export function useDraggable(initialPosition = null) {
     };
   }, [isDragging]);
 
-  // Persist position to localStorage
   useEffect(() => {
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(position));

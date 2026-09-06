@@ -1,10 +1,7 @@
-/* PAROKSH Content Script Styles */
-/* Ensure the injected chat window doesn't conflict with page styles */
-
 #paroksh-agent-container {
-  /* Container for the floating AI chat window */
+  all: initial;
 }
 
 #paroksh-agent-iframe {
-  /* Iframe styling is applied inline by the content script */
+  color-scheme: normal;
 }
