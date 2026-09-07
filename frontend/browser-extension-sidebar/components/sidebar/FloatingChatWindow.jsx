@@ -2,12 +2,16 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Plus } from 'lucide-react';
 import { ChatHeader } from '@/components/sidebar/ChatHeader';
 import { ResizeHandles } from '@/components/sidebar/ResizeHandle';
 import { EmptyState } from '@/components/sidebar/EmptyState';
 import { ChatInterface } from '@/components/sidebar/ChatInterface';
 import { AgentExecutionPanel } from '@/components/sidebar/AgentExecutionPanel';
 import { InputComposer } from '@/components/sidebar/InputComposer';
+import { ThemeToggle } from '@/components/sidebar/ThemeToggle';
+import { Button } from '@/components/ui/button';
+import { useTheme } from '@/components/theme-provider';
 import VoiceCircleOverlay from '@/components/sidebar/VoiceVisualizer';
 import { useDraggable } from '@/hooks/useDraggable';
 import { useResizable } from '@/hooks/useResizable';
@@ -96,9 +100,22 @@ export function FloatingChatWindow({
 
   const showEmptyState = messages.length === 0;
 
+  // Sync the extension chrome (content-script header/frame background) with
+  // the app theme so the whole floating window matches light/dark.
+  const { resolvedTheme } = useTheme();
+  useEffect(() => {
+    if (!isEmbedded || typeof window === 'undefined') return;
+    window.parent.postMessage(
+      { type: 'paroksh/theme', theme: resolvedTheme || 'dark' },
+      '*'
+    );
+  }, [isEmbedded, resolvedTheme]);
+
+  // In embedded/extension mode the chat fills the iframe exactly —
+  // no floating offsets, no outer chrome, no drag/resize.
   const effectivePos = {
-    x: position.x + positionAdjust.x,
-    y: position.y + positionAdjust.y,
+    x: isEmbedded ? 0 : position.x + positionAdjust.x,
+    y: isEmbedded ? 0 : position.y + positionAdjust.y,
   };
 
   if (!isVisible) {
@@ -124,23 +141,21 @@ export function FloatingChatWindow({
     // communicates size changes back to the content script.
     return (
       <div className="relative z-[1] w-full h-full flex flex-col overflow-hidden bg-background">
-        <div className="border-b border-border/30">
-          <ChatHeader
-            agentStatus={AGENT_STATUS.READY}
-            isDragging={false}
-            onMaximize={() => {}}
-            isMaximized={false}
-            onClose={handleClose}
-            onResetSize={() => {}}
-            onNewSession={onNewSession}
-          />
+        {/* Embedded toolbar: New session + theme toggle (window chrome
+            lives in the content script, so this row replaces ChatHeader) */}
+        <div className="flex items-center justify-end gap-0.5 px-2 py-1 border-b border-border/30">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-6 gap-1 px-2 text-xs text-muted-foreground hover:text-foreground"
+            title="Start a new session (clears the conversation)"
+            onClick={onNewSession}
+          >
+            <Plus className="h-3 w-3" />
+            New session
+          </Button>
+          <ThemeToggle size="compact" />
         </div>
-
-        {/* Resize handles - visible in embedded mode for easy resizing */}
-        <ResizeHandles
-          onResizeStart={handleResizeStart}
-          isResizing={isResizing}
-        />
 
         <VoiceCircleOverlay
           voiceState={voiceAgent?.state}
@@ -196,11 +211,11 @@ export function FloatingChatWindow({
     <motion.div
       className="fixed z-[9999]"
       style={{
-        left: effectivePos.x,
-        top: isMaximized ? 8 : effectivePos.y,
-        width: `${size.width}px`,
-        height: isMaximized ? 'calc(100vh - 16px)' : `${size.height}px`,
-        maxHeight: isMaximized ? 'calc(100vh - 16px)' : 'none',
+        left: isEmbedded ? 0 : effectivePos.x,
+        top: isEmbedded ? 0 : (isMaximized ? 8 : effectivePos.y),
+        width: isEmbedded ? '100%' : `${size.width}px`,
+        height: isEmbedded ? '100%' : (isMaximized ? 'calc(100vh - 16px)' : `${size.height}px`),
+        maxHeight: isEmbedded ? 'none' : (isMaximized ? 'calc(100vh - 16px)' : 'none'),
       }}
       initial={{ opacity: 0, scale: 0.9, y: 20 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -208,13 +223,13 @@ export function FloatingChatWindow({
       transition={{ type: 'spring', damping: 25, stiffness: 300 }}
     >
       <div
-        className="relative h-full flex flex-col rounded-xl border border-border/30 bg-background overflow-hidden"
+        className={'relative h-full flex flex-col overflow-hidden ' + (isEmbedded ? 'bg-background' : 'rounded-xl border border-border/30 bg-background')}
         onMouseDown={(e) => e.stopPropagation()}
       >
         <div
           ref={headerRef}
-          className="cursor-grab active:cursor-grabbing border-b border-border/30"
-          onMouseDown={handleDragStart}
+          className={'border-b border-border/30 ' + (isEmbedded ? '' : 'cursor-grab active:cursor-grabbing')}
+          onMouseDown={isEmbedded ? undefined : handleDragStart}
         >
           <ChatHeader
             agentStatus={AGENT_STATUS.READY}
@@ -227,10 +242,12 @@ export function FloatingChatWindow({
           />
         </div>
 
-        <ResizeHandles
-          onResizeStart={handleResizeStart}
-          isResizing={isResizing}
-        />
+        {!isEmbedded && (
+          <ResizeHandles
+            onResizeStart={handleResizeStart}
+            isResizing={isResizing}
+          />
+        )}
 
         <VoiceCircleOverlay
           voiceState={voiceAgent?.state}

@@ -32,3 +32,14 @@ Thumbs.db
 # Cache
 .cache/
 node_modules
+
+# Local test harness + debug scripts (not part of the app)
+test-server.js
+ui-test.js
+extension-test.js
+ext-debug.js
+issue-debug.js
+test-page.html
+*-test.png
+*-test-fail.png
+

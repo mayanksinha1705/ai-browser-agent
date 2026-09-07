@@ -31,14 +31,22 @@ export function useVoiceAgent(options = {}) {
   const speakingUtteranceRef = useRef(null);
   const toggleStateRef = useRef(false);
 
-  const isSupported = () => {
-    return typeof navigator !== 'undefined' &&
-      !!navigator.mediaDevices?.getUserMedia &&
-      typeof MediaRecorder !== 'undefined';
-  };
+  // Hydration-safe capability detection: the first client render MUST match the
+  // SSR HTML (where real browser APIs don't exist), so we optimistically assume
+  // support and re-evaluate after mount. Checking capabilities during render
+  // caused a server/client mismatch ("Voice chat" vs "Voice not supported").
+  const [voiceSupported, setVoiceSupported] = useState(true);
+
+  useEffect(() => {
+    setVoiceSupported(
+      typeof navigator !== 'undefined' &&
+        !!navigator.mediaDevices?.getUserMedia &&
+        typeof MediaRecorder !== 'undefined'
+    );
+  }, []);
 
   const startRecording = useCallback(async () => {
-    if (!isSupported()) {
+    if (!voiceSupported) {
       setError('Voice recording is not supported in this browser.');
       return false;
     }
@@ -117,7 +125,7 @@ export function useVoiceAgent(options = {}) {
       }
       return false;
     }
-  }, [state, vadThreshold, numBars]);
+  }, [state, vadThreshold, numBars, voiceSupported]);
 
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current && toggleStateRef.current) {
@@ -240,7 +248,7 @@ export function useVoiceAgent(options = {}) {
     isActive: state !== VOICE_STATE.IDLE,
     error,
     permissionDenied,
-    isSupported: isSupported(),
+    isSupported: voiceSupported,
     toggleListening,
     startListening: startRecording,
     stopListening: stopRecording,

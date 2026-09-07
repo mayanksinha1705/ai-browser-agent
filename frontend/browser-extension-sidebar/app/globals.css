@@ -61,7 +61,14 @@
     font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   }
 
+  html[data-embed="extension"] {
+    height: 100%;
+    overflow: hidden;
+  }
+
   html[data-embed="extension"] body {
+    height: 100%;
+    overflow: hidden;
     background: transparent;
     margin: 0;
     padding: 0;
